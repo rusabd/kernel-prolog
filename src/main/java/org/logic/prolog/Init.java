@@ -21,9 +21,9 @@ public class Init {
         +"Copyright (c) Paul Tarau 1999-2011\n";
     return s;
   }
-  
-  public static String default_lib=Init.class.getResource("lib.pro").getFile();
-  
+
+  public static final String default_lib="lib.pro";
+
   public static DataBase default_db;
   
   public static Builtins builtinDict;
