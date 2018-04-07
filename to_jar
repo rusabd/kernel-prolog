@@ -1,6 +1,0 @@
-pushd .
-cd bin
-jar cvf kernelProlog.jar -r prolog
-popd
-mv -f bin/kernelProlog.jar .
-ls -l *.jar

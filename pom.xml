@@ -15,6 +15,17 @@
           </archive>
         </configuration>
       </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <version>2.10.3</version>
+        <configuration>
+          <keywords>true</keywords>
+          <show>private</show>
+          <windowtitle>Kernel Prolog</windowtitle>
+          <excludePackageNames>org.logic.prolog.terms</excludePackageNames>
+        </configuration>
+      </plugin>
     </plugins>
   </build>
 
