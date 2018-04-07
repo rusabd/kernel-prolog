@@ -1,8 +1,10 @@
 package org.logic.prolog.terms;
 
+import java.sql.DatabaseMetaData;
 import java.util.Iterator;
 
 import org.logic.prolog.Init;
+import org.logic.prolog.fluents.DataBase;
 import org.logic.prolog.io.IO;
 
 //!depends
@@ -18,6 +20,9 @@ import org.logic.prolog.io.IO;
  * In case of failure of Guard or of unification, getElement() returns null.
  */
 public class Unfolder extends Source {
+
+  private final DataBase db;
+
   private int oldtop;
   
   private Iterator e;
@@ -31,8 +36,9 @@ public class Unfolder extends Source {
    * step in program p. Iterator e is set to range over matching
    * clauses in the database of program p.
    */
-  public Unfolder(Clause g,Prog p){
+  public Unfolder(DataBase db, Clause g,Prog p){
     super(p);
+    this.db=db;
     this.goal=g;
     this.prog=p;
     this.e=null;
@@ -42,7 +48,7 @@ public class Unfolder extends Source {
       Term first=goal.getFirst();
       if(null!=first) {
         oldtop=prog.getTrail().size();
-        this.e=Init.default_db.toEnumerationFor(first.getKey());
+        this.e=db.toEnumerationFor(first.getKey());
         if(!e.hasNext())
           trace_nomatch(first);
       }

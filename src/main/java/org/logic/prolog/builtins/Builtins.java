@@ -47,7 +47,7 @@ public class Builtins extends HashDict {
      This constructor registers builtins. Please put a header here
      if you add a builtin at the bottom of this file.
   */
-  public Builtins(){
+  public Builtins(DataBase db){
     // add a line here for each new builtin
     
     // basics
@@ -63,17 +63,17 @@ public class Builtins extends HashDict {
     register(new set_max_answers());
     register(new set_trace());
     register(new stack_dump());
-    register(new consult());
-    register(new reconsult());
-    register(new reconsult_again());
+    register(new consult(db));
+    register(new reconsult(db));
+    register(new reconsult_again(db));
     
     // database
-    register(new at_key());
-    register(new pred_to_string());
-    register(new db_to_string());
+    register(new at_key(db));
+    register(new pred_to_string(db));
+    register(new db_to_string(db));
     
     register(new new_db());
-    register(new get_default_db());
+    register(new get_default_db(db));
     register(new db_remove());
     register(new db_add());
     register(new db_collect());
@@ -88,7 +88,7 @@ public class Builtins extends HashDict {
     register(new numbervars());
     
     // fluent constructors
-    register(new unfolder_source());
+    register(new unfolder_source(db));
     register(new answer_source());
     
     register(new source_list());
@@ -412,13 +412,17 @@ final class set_max_answers extends FunBuiltin {
 */
 
 final class reconsult extends FunBuiltin {
-  reconsult(){
+
+  private final DataBase db;
+
+  reconsult(DataBase db){
     super("reconsult",1);
+    this.db = db;
   }
   
   public int exec(Prog p) {
     String f=((Const)getArg(0)).name();
-    return DataBase.fromFile(f)?1:0;
+    return db.fromFile(f)?1:0;
   }
 }
 
@@ -428,14 +432,17 @@ final class reconsult extends FunBuiltin {
   @see reconsult
 */
 final class consult extends FunBuiltin {
-  consult(){
+
+  private final DataBase db;
+  consult(DataBase db){
     super("consult",1);
+    this.db = db;
   }
   
   public int exec(Prog p) {
     String f=((Const)getArg(0)).name();
     IO.trace("consulting: "+f);
-    return DataBase.fromFile(f,false)?1:0;
+    return db.fromFile(f,false)?1:0;
   }
 }
 
@@ -443,12 +450,15 @@ final class consult extends FunBuiltin {
   shorthand for reconsulting the last file
 */
 final class reconsult_again extends ConstBuiltin {
-  reconsult_again(){
+
+  private final DataBase db;
+  reconsult_again(DataBase db){
     super("reconsult_again");
+    this.db = db;
   }
   
   public int exec(Prog p) {
-    return DataBase.fromFile()?1:0;
+    return db.fromFile()?1:0;
   }
 }
 
@@ -456,12 +466,16 @@ final class reconsult_again extends ConstBuiltin {
  * gets default database
  */
 final class get_default_db extends FunBuiltin {
-  get_default_db(){
+
+  private final DataBase db;
+
+  get_default_db(DataBase db){
     super("get_default_db",1);
+    this.db = db;
   }
   
   public int exec(Prog p) {
-    return putArg(0,new JavaObject(Init.default_db),p);
+    return putArg(0,new JavaObject(db),p);
   }
 }
 
@@ -559,13 +573,16 @@ final class db_source extends FunBuiltin {
   collects all matching terms in a (possibly empty) list
 */
 final class at_key extends FunBuiltin {
-  
-  at_key(){
+
+  private final DataBase db;
+
+  at_key(DataBase db){
     super("at_key",2);
+    this.db = db;
   }
   
   public int exec(Prog p) {
-    Term R=Init.default_db.all(getArg(0).getKey(),new Var());
+    Term R=db.all(getArg(0).getKey(),new Var());
     return putArg(1,R,p);
   }
 }
@@ -574,14 +591,17 @@ final class at_key extends FunBuiltin {
  * Returns a representation of predicate as a string constant
  */
 final class pred_to_string extends FunBuiltin {
-  
-  pred_to_string(){
+
+  private final DataBase db;
+
+  pred_to_string(DataBase db){
     super("pred_to_string",2);
+    this.db = db;
   }
   
   public int exec(Prog p) {
     String key=getArg(0).getKey();
-    String listing=Init.default_db.pred_to_string(key);
+    String listing=db.pred_to_string(key);
     if(null==listing)
       return 0;
     Const R=new Const(listing);
@@ -593,12 +613,16 @@ final class pred_to_string extends FunBuiltin {
   lists all the local blackboard to a string (Linda terms + clauses)
 */
 final class db_to_string extends FunBuiltin {
-  db_to_string(){
+
+  private final DataBase db;
+
+  db_to_string(DataBase db){
     super("db_to_string",1);
+    this.db = db;
   }
   
   public int exec(Prog p) {
-    return putArg(0,new Const(Init.default_db.pprint()),p);
+    return putArg(0,new Const(db.pprint()),p);
   }
 }
 
@@ -901,14 +925,18 @@ final class answer_source extends FunBuiltin {
   Builds a new clause H:-B and maps it to an iterator
 */
 final class unfolder_source extends FunBuiltin {
-  unfolder_source(){
+
+  private final DataBase db;
+
+  unfolder_source(DataBase db){
     super("unfolder_source",2);
+    this.db = db;
   }
   
   public int exec(Prog p) {
     Clause goal=getArg(0).toClause();
     Prog newp=new Prog(goal,p);
-    Unfolder S=new Unfolder(goal,newp);
+    Unfolder S=new Unfolder(db, goal,newp);
     return putArg(1,S,p);
   }
 }

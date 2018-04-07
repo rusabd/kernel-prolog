@@ -90,15 +90,15 @@ class Lexer extends StreamTokenizer {
   protected final static Term make_const(String s) {
     return new constToken(s);
   }
-  
+
   private final static Term make_fun(String s) {
     return new funToken(s);
   }
-  
+
   private final static Term make_int(double n) {
     return new intToken((int)n);
   }
-  
+
   private final static Term make_real(double n) {
     return new realToken(n);
   }

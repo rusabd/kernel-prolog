@@ -157,7 +157,7 @@ public class DataBase extends BlackBoard {
     overriding existing predicates
     to be extended to load from URLs transparently
   */
-  static public boolean fromFile(String f,boolean overwrite) {
+  public boolean fromFile(String f,boolean overwrite) {
     IO.trace("last consulted file was: "+lastFile);
     boolean ok=fileToProg(f,overwrite);
     if(ok) {
@@ -171,7 +171,7 @@ public class DataBase extends BlackBoard {
   /**
     reconsults a file by overwritting similar predicates in memory
   */
-  static public boolean fromFile(String f) {
+  public boolean fromFile(String f) {
     return fromFile(f,true);
   }
   
@@ -180,7 +180,7 @@ public class DataBase extends BlackBoard {
   /**
     reconsults the last reconsulted file
   */
-  static public boolean fromFile() {
+  public boolean fromFile() {
     IO.println("begin('"+lastFile+"')");
     boolean ok=fromFile(lastFile);
     if(ok)
@@ -188,7 +188,7 @@ public class DataBase extends BlackBoard {
     return ok;
   }
   
-  static private boolean fileToProg(String fname,boolean overwrite) {
+  private boolean fileToProg(String fname,boolean overwrite) {
     Reader sname=IO.toFileReader(fname);
     if(null==sname)
       return false;
@@ -200,13 +200,13 @@ public class DataBase extends BlackBoard {
     blackboard. Overwrites old predicates if asked to.
     Returns true if all went well.
   */
-  static public boolean streamToProg(Reader sname,boolean overwrite) {
+  public boolean streamToProg(Reader sname,boolean overwrite) {
     return streamToProg(sname.toString(),sname,overwrite);
   }
   
-  static private boolean streamToProg(String fname,Reader sname,
+  private boolean streamToProg(String fname,Reader sname,
       boolean overwrite) {
-    BlackBoard ktable=overwrite?(BlackBoard)Init.default_db.clone():null;
+    BlackBoard ktable=overwrite?(BlackBoard)this.clone():null;
     // Clause Err=new Clause(new Const("error"),new Var());
     try {
       Parser p=new Parser(sname);
@@ -218,7 +218,7 @@ public class DataBase extends BlackBoard {
     return true;
   }
   
-  static private void apply_parser(Parser p,String fname,BlackBoard ktable) {
+  private void apply_parser(Parser p,String fname,BlackBoard ktable) {
     for(;;) {
       if(p.atEOF())
         return;
@@ -239,24 +239,24 @@ public class DataBase extends BlackBoard {
   /**
     adds a Clause to the joint Linda and Predicate table
   */
-  static public void addClause(Clause C,HashDict ktable) {
+  public void addClause(Clause C,HashDict ktable) {
     String k=C.getKey();
     // overwrites previous definitions
     if(null!=ktable&&null!=ktable.get(k)) {
       ktable.remove(k);
-      Init.default_db.remove(k);
+      remove(k);
     }
-    Init.default_db.out(k,C,false);
+    out(k,C,false);
   }
   
   /**
     adds a Clause to the joint Linda and Predicate table
     @see Clause
   */
-  static public void processClause(Clause C,HashDict ktable) {
+  public void processClause(Clause C,HashDict ktable) {
     if(C.getHead().matches(new Const("init"))) {
       // IO.mes("init: "+C.getBody());
-      Prog.firstSolution(C.getHead(),C.getBody());
+      Prog.firstSolution(this, C.getHead(),C.getBody());
     } else {
       // IO.mes("ADDING= "+C.pprint());
       addClause(C,ktable);

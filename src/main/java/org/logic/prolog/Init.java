@@ -24,19 +24,17 @@ public class Init {
 
   public static final String default_lib="lib.pro";
 
-  public static DataBase default_db;
-  
   public static Builtins builtinDict;
-  
+
   public static Clause getGoal(String line) {
     Clause G=Clause.goalFromString(line);
     // IO.mes("getGoal: "+G+" DICT: "+G.dict); //OK
     return G;
   }
   
-  public static void run_query(String query) {
+  public static void run_query(DataBase db, String query) {
     Clause Goal=getGoal(query);
-    timeGoal(Goal);
+    timeGoal(db, Goal);
   }
   
   /**
@@ -49,18 +47,18 @@ public class Init {
   /**
   * evalutes a query
   */
-  public static void evalGoal(Clause Goal) {
+  public static void evalGoal(DataBase db, Clause Goal) {
     Clause NamedGoal=Goal.cnumbervars(false);
     Term Names=NamedGoal.getHead();
     if(!(Names instanceof Fun)) { // no vars in Goal
-      Term Result=Prog.firstSolution(Goal.getHead(),Goal.getBody());
+      Term Result=Prog.firstSolution(db, Goal.getHead(),Goal.getBody());
       if(!Const.aNo.equals(Result))
         Result=Const.aYes;
       IO.println(Result.toString());
       return;
     }
     
-    Prog E=new Prog(Goal,null);
+    Prog E=new Prog(db, Goal);
     
     for(int i=0;;i++) {
       Term R=Prog.ask_engine(E);
@@ -101,10 +99,10 @@ public class Init {
   *  evaluates and times a Goal querying program P
   */
   
-  public static void timeGoal(Clause Goal) {
+  public static void timeGoal(DataBase db, Clause Goal) {
     long t1=System.currentTimeMillis();
     try {
-      evalGoal(Goal);
+      evalGoal(db, Goal);
     } catch(Throwable e) {
       IO.errmes("Execution error in goal:\n  "+Goal.pprint()+".\n",e);
     }
@@ -116,18 +114,18 @@ public class Init {
   *  (almost) standard Prolog-like toplevel in Java
   *  (will) print out variables and values
   */
-  public static void standardTop() {
-    standardTop("?- ");
+  public static void standardTop(DataBase db) {
+    standardTop(db, "?- ");
   }
   
-  public static void standardTop(String prompt) {
+  public static void standardTop(DataBase db, String prompt) {
     for(;;) {
       Clause G=getGoal(IO.promptln(prompt));
       if(null==G) {
         continue;
       }
       IO.peer=null;
-      timeGoal(G);
+      timeGoal(db, G);
     }
   }
   
@@ -136,8 +134,8 @@ public class Init {
    first solution of the form "the(Answer)" or the constant
    "no" if no solution exists
   */
-  public static Term askProlog(Term Answer,Term Body) {
-    return Prog.firstSolution(Answer,Body);
+  public static Term askProlog(DataBase db, Term Answer,Term Body) {
+    return Prog.firstSolution(db, Answer,Body);
   }
   
   /**
@@ -146,8 +144,8 @@ public class Init {
     Answer is an instance of Goal or the constant
     "no" if no solution exists
   */
-  public static Term askProlog(Term Goal) {
-    return askProlog(Goal,Goal);
+  public static Term askProlog(DataBase db, Term Goal) {
+    return askProlog(db, Goal,Goal);
   }
   
   /**
@@ -156,16 +154,17 @@ public class Init {
     of the variables or the first solution to the query or "no"
     if no such solution exists
   */
-  public static String askProlog(String query) {
+  public static String askProlog(DataBase db, String query) {
     Clause Goal=getGoal(query);
     Term Body=Goal.getBody();
-    return askProlog(Body).pprint();
+    return askProlog(db, Body).pprint();
   }
   
   public static boolean run(String[] args) {
+    DataBase db = Init.startProlog();
     if(null!=args) {
       for(int i=0;i<args.length;i++) {
-        String result=askProlog(args[i]);
+        String result=askProlog(db, args[i]);
         IO.trace(result);
         if("no".equals(result.intern())) {
           IO.errmes("failing cmd line argument: "+args[i]);
@@ -180,11 +179,10 @@ public class Init {
      Initialises key data areas. Runs a first query, which,
      if suceeeds a true, otherwise false is returned
   */
-  public static final boolean startProlog() {
+  public static final DataBase startProlog() {
     // should be final for expiration mechanism (it should avoid overriding!)
     IO.println(getInfo());
-    default_db=new DataBase();
-    return true;
+    return new DataBase();
   }
   
 }

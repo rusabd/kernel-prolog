@@ -1,5 +1,7 @@
 package org.logic.prolog.terms;
 
+import org.logic.prolog.fluents.DataBase;
+
 /**
   Basic toplevel Prolog Engine. Loads and executes Prolog
   programs and can be extended to spawn threads executing on new Prolog Engine
@@ -7,22 +9,36 @@ package org.logic.prolog.terms;
   synced local and remote Linda transactions
 */
 public class Prog extends Source implements Runnable {
-  // CONSTRUCTORS
-  
+
+  private final DataBase db;
+
   /**
     Creates a Prog starting execution with argument "goal" 
   */
   public Prog(Clause goal,Prog parent){
     super(parent);
     this.parent=parent;
+    this.db = parent.getDb();
     goal=goal.ccopy();
     this.trail=new Trail();
     this.orStack=new ObjectStack();
     if(null!=goal)
-      orStack.push(new Unfolder(goal,this));
+      orStack.push(new Unfolder(db, goal,this));
     
   }
-  
+
+  public Prog(DataBase db, Clause goal){
+    super(null);
+    this.parent=null;
+    this.db = db;
+    goal=goal.ccopy();
+    this.trail=new Trail();
+    this.orStack=new ObjectStack();
+    if(null!=goal)
+      orStack.push(new Unfolder(db, goal,this));
+
+  }
+
   // INSTANCE FIELDS
   
   private Trail trail;
@@ -69,7 +85,7 @@ public class Prog extends Source implements Runnable {
         else
           I.stop();
         if(null==answer)
-          orStack.push(new Unfolder(nextgoal,this));
+          orStack.push(new Unfolder(db, nextgoal,this));
       }
     }
     Term head;
@@ -93,8 +109,8 @@ public class Prog extends Source implements Runnable {
     Computes a copy of the first solution X of Goal G.
   */
   
-  static public Term firstSolution(Term X,Term G) {
-    Prog p=new_engine(X,G);
+  static public Term firstSolution(DataBase db, Term X,Term G) {
+    Prog p=new_engine(db, X,G);
     Term A=ask_engine(p);
     if(A!=null) {
       A=new Fun("the",A);
@@ -107,9 +123,9 @@ public class Prog extends Source implements Runnable {
   /**
    * creates a new logic engine
    */
-  static public Prog new_engine(Term X,Term G) {
+  static public Prog new_engine(DataBase db, Term X,Term G) {
     Clause C=new Clause(X,G);
-    Prog p=new Prog(C,null);
+    Prog p=new Prog(db, C);
     return p;
   }
   
@@ -129,5 +145,9 @@ public class Prog extends Source implements Runnable {
       if(null==Answer)
         break;
     }
+  }
+
+  public DataBase getDb() {
+    return db;
   }
 }

@@ -8,11 +8,11 @@ import org.logic.prolog.fluents.DataBase;
    Minimal command line only Prolog main entry point
 */
 public class Main {
+  private static DataBase db;
   public static int init() {
-    if(!Init.startProlog())
-      return 0;
-    Init.builtinDict=new Builtins();
-    DataBase.streamToProg(new InputStreamReader(Init.class.getResourceAsStream(Init.default_lib)), true);
+    db = Init.startProlog();
+    Init.builtinDict=new Builtins(db);
+    db.streamToProg(new InputStreamReader(Init.class.getResourceAsStream(Init.default_lib)), true);
     return 1;
   }
   
@@ -21,6 +21,6 @@ public class Main {
       return;
     if(!Init.run(args))
       return;
-    Init.standardTop(); // interactive
+    Init.standardTop(db); // interactive
   }
 }
